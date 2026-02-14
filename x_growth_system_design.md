@@ -1,8 +1,8 @@
-# X Growth Automation System Design
+# Project 𝕏 System Design
 
 ## 1. Executive Summary
 
-X is an AI-powered X/Twitter growth operating system designed to automate engagement for serious founders and creators. The system meticulously monitors two primary sources: the user's **Home timeline** (tweets from accounts the user follows) and a specific **X List** (list ID `2021997563394810120`). Upon detecting new tweets, X generates high-quality, human-sounding replies and posts them safely, adhering to stringent ban-prevention protocols. The core philosophy of X prioritizes safety, human-like behavior, and long-term account health, ensuring scalable architecture and robust performance. Key features include intelligent feed monitoring, an advanced reply generation pipeline, a queue-based posting engine with a token-bucket rate limiter, and a multi-layered ban prevention system.
+Project 𝕏 is an AI-powered X/Twitter growth operating system designed to automate engagement for serious founders and creators. The system meticulously monitors two primary sources: the user's **Home timeline** (tweets from accounts the user follows) and a specific **X List** (list ID `2021997563394810120`). Upon detecting new tweets, Project 𝕏 generates high-quality, human-sounding replies and posts them safely, adhering to stringent ban-prevention protocols. The core philosophy of Project 𝕏 prioritizes safety, human-like behavior, and long-term account health, ensuring scalable architecture and robust performance. Key features include intelligent feed monitoring, an advanced reply generation pipeline, a queue-based posting engine with a token-bucket rate limiter, and a multi-layered ban prevention system.
 
 ## 2. MVP Scope (Phase 1)
 

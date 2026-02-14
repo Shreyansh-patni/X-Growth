@@ -1,6 +1,6 @@
-# X Growth Automation - Startup Script
+# Project 𝕏 Automation - Startup Script
 
-Write-Host "Starting X Growth Automation System..." -ForegroundColor Green
+Write-Host "Starting Project 𝕏 Automation System..." -ForegroundColor Green
 
 # Run Database Migrations
 Write-Host "Checking for database updates..." -ForegroundColor Cyan

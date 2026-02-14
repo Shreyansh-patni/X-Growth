@@ -1,4 +1,4 @@
-# X Growth Automation System (MVP)
+# Project 𝕏 (MVP)
 
 A comprehensive automation system for growing X (Twitter) accounts using AI-generated replies and intelligent monitoring.
 

@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="X Growth Automation API")
+app = FastAPI(title="Project 𝕏 API")
 
 # Re-added the router inclusion, assuming it's still needed
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -76,4 +76,4 @@ async def startup_event():
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to X Growth Automation API", "status": "running"}
+    return {"message": "Welcome to Project 𝕏 API", "status": "running"}

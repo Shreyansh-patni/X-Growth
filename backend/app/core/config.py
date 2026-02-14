@@ -2,7 +2,7 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "X Growth Automation"
+    PROJECT_NAME: str = "Project 𝕏 Automation"
     API_V1_STR: str = "/api/v1"
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "localhost")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     X_API_SECRET_KEY: str | None = os.getenv("X_API_SECRET_KEY")
     X_ACCESS_TOKEN: str | None = os.getenv("X_ACCESS_TOKEN")
     X_ACCESS_TOKEN_SECRET: str | None = os.getenv("X_ACCESS_TOKEN_SECRET")
+    
+    # OAuth 2.0
+    X_CLIENT_ID: str | None = os.getenv("X_CLIENT_ID")
+    X_CLIENT_SECRET: str | None = os.getenv("X_CLIENT_SECRET")
+    X_REDIRECT_URI: str = os.getenv("X_REDIRECT_URI", "http://localhost:8001/api/v1/auth/callback/x")
 
     # Browser Automation
     X_USERNAME: str | None = os.getenv("X_USERNAME")

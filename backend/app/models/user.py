@@ -12,8 +12,9 @@ class User(Base):
     x_user_id = Column(String(255), unique=True, nullable=False, index=True)
     x_username = Column(String(255), unique=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    access_token = Column(String, nullable=False)
-    access_token_secret = Column(String, nullable=False)
+    access_token = Column(String, nullable=True) # Check if nullable needed, initially maybe not but strictness varies
+    access_token_secret = Column(String, nullable=True) # Kept for backward compat or if needed
+    refresh_token = Column(String, nullable=True) # OAuth 2.0
     account_health_score = Column(Numeric(5, 2), default=100.00, nullable=False)
     last_health_check_at = Column(DateTime(timezone=True))
     is_active = Column(Boolean, default=True, nullable=False, index=True)
