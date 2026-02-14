@@ -58,6 +58,15 @@ async def run_posting_loop():
 
 @app.on_event("startup")
 async def startup_event():
+    # Fallback: Create tables if not exist (for MVP resilience)
+    try:
+        from app.core.database import engine, Base
+        from app.models import User, Tweet, ReplyCandidate, Keyword, Persona
+        Base.metadata.create_all(bind=engine)
+        logger.info("Tables created/verified.")
+    except Exception as e:
+        logger.error(f"Failed to create tables: {e}")
+
     # Start background tasks
     try:
         asyncio.create_task(run_monitoring_loop())

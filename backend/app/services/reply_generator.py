@@ -48,12 +48,24 @@ class ReplyGeneratorService:
         return candidates
 
     def _construct_prompt(self, tweet: Tweet) -> str:
-        # Simplified prompt construction
-        system_instruction = "You are an expert X/Twitter growth hacker. Generate concise, engaging, and human-sounding replies."
-        user_rules = self.user.ai_rules.get("style", "professional and witty")
+        # Fetch active persona
+        from app.models.persona import Persona
+        active_persona = self.db.query(Persona).filter(
+            Persona.user_id == self.user.id, 
+            Persona.is_active == True
+        ).first()
+
+        if active_persona:
+            system_instruction = active_persona.system_prompt
+            style = f"Persona: {active_persona.name}"
+        else:
+            # Fallback
+            system_instruction = "You are an expert X/Twitter growth hacker. Generate concise, engaging, and human-sounding replies."
+            style = self.user.ai_rules.get("style", "professional and witty")
+
         tweet_context = f"Tweet by {tweet.author_x_username}: {tweet.full_text}"
         
-        return f"{system_instruction}\nStyle: {user_rules}\n\n{tweet_context}\n\nGenerate 3 distinct replies."
+        return f"{system_instruction}\nStyle: {style}\n\n{tweet_context}\n\nGenerate 3 distinct replies."
 
     async def _generate_openai(self, prompt: str, count: int) -> List[str]:
         try:
