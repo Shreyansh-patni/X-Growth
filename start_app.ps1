@@ -2,6 +2,10 @@
 
 Write-Host "Starting X Growth Automation System..." -ForegroundColor Green
 
+# Run Database Migrations
+Write-Host "Checking for database updates..." -ForegroundColor Cyan
+python -m alembic upgrade head
+
 # Start Backend in background
 Write-Host "Starting Backend (Port 8001)..." -ForegroundColor Cyan
 Start-Process -FilePath "python" -ArgumentList "-m uvicorn app.main:app --port 8001" -WorkingDirectory "backend" -WindowStyle Minimized
