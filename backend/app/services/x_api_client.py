@@ -90,6 +90,20 @@ class XAPIClient:
             response.raise_for_status()
             return response.json()
 
+    async def post_tweet(self, text: str) -> Dict[str, Any]:
+        """
+        Post a new tweet (not a reply).
+        """
+        payload = {"text": text}
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.BASE_URL}/tweets",
+                headers=self.headers,
+                json=payload
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def fetch_user_me(self) -> Dict[str, Any]:
         """
         Fetch current user details including metrics.

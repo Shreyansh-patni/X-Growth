@@ -5,3 +5,4 @@ from .persona import PersonaOut as Persona, PersonaCreate, PersonaUpdate
 from .keyword import KeywordOut as Keyword, KeywordCreate, KeywordUpdate
 from .list import MonitoredList, MonitoredListCreate, MonitoredListUpdate, XListResponse
 from .stats import UserStatsOut as UserStats, DashboardStats
+from .scheduler import ScheduledTweetOut as ScheduledTweet, ScheduledTweetCreate, ScheduledTweetUpdate

@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from typing import List
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.models.reply import ReplyCandidate, ReplyHistory
+from app.models.reply import ReplyCandidate, ReplyHistory, ReplyStatus
+from app.models.scheduled_tweet import ScheduledTweet, ScheduledTweetStatus
 from app.services.x_api_client import XAPIClient
 from app.services.rate_limiter import RateLimiterService
 
@@ -18,13 +19,17 @@ class PostingEngineService:
         self.rate_limiter = RateLimiterService(db, user)
 
     async def process_queue(self):
+        """
+        Process both Reply Candidates and Scheduled Tweets.
+        """
+        await self._process_reply_candidates()
+        await self._process_scheduled_tweets()
+
+    async def _process_reply_candidates(self):
         # 1. Fetch approved, unposted reply candidates
         candidates = self.db.query(ReplyCandidate).filter(
             ReplyCandidate.user_id == self.user.id,
             ReplyCandidate.is_approved == True,
-            # We need a way to check if already posted. 
-            # In the schema, ReplyHistory links to ReplyCandidate.
-            # So checking if ReplyHistory exists for this candidate.
             ~ReplyCandidate.reply_history.has() 
         ).order_by(ReplyCandidate.quality_score.desc()).limit(5).all()
 
@@ -32,24 +37,15 @@ class PostingEngineService:
             return
 
         for candidate in candidates:
-            # 2. Check Global Rate Limit (Token Bucket)
+            # Check Global Rate Limit
             if not self.rate_limiter.check_and_consume(tokens_needed=1.0):
                 logger.info(f"Rate limit reached for user {self.user.x_username}. skipping posting.")
-                break # Stop processing queue for now
+                break 
 
-            # 3. Check Cooldown (5 replies then 60s logic)
-            # This logic mimics the rate limiter's refill rate essentially 
-            # but usually enforces a stricter "stop" after a batch.
-            # Our Token Bucket with capacity=5 and refill=1/12s approximates this.
-            # For strict "wait 60s after 5", we'd need extra state tracking.
-            # Detailed implementation of strict batch cooling:
-            # Check RateLimit.current_burst_count
-            
-            # 4. Post to X
+            # Post to X
             try:
                 logger.info(f"Posting reply to tweet {candidate.tweet.x_tweet_id}...")
                 
-                # Verify we have original tweet ID
                 if not candidate.tweet.x_tweet_id:
                     logger.error(f"Missing original tweet ID for candidate {candidate.id}")
                     continue
@@ -59,14 +55,14 @@ class PostingEngineService:
                     reply_to_tweet_id=candidate.tweet.x_tweet_id
                 )
                 
-                # 5. Log Success
+                # Log Success
                 history = ReplyHistory(
                     reply_candidate_id=candidate.id,
                     user_id=self.user.id,
                     tweet_id=candidate.tweet_id,
                     posted_x_tweet_id=response.get("data", {}).get("id"),
                     posted_text=candidate.generated_text,
-                    status="SUCCESS",
+                    status=ReplyStatus.posted,
                     response_metadata=response
                 )
                 self.db.add(history)
@@ -80,11 +76,40 @@ class PostingEngineService:
                     user_id=self.user.id,
                     tweet_id=candidate.tweet_id,
                     posted_text=candidate.generated_text,
-                    status="FAILED",
+                    status=ReplyStatus.failed,
                     error_message=str(e)
                 )
                 self.db.add(history)
                 self.db.commit()
             
-            # Random delay between posts in a batch
             await asyncio.sleep(5) 
+
+    async def _process_scheduled_tweets(self):
+        now = datetime.now()
+        tweets = self.db.query(ScheduledTweet).filter(
+            ScheduledTweet.user_id == self.user.id,
+            ScheduledTweet.status == ScheduledTweetStatus.pending,
+            ScheduledTweet.scheduled_for <= now
+        ).all()
+        
+        for tweet in tweets:
+             # Check Rate Limit (Separate bucket? For now share same)
+            if not self.rate_limiter.check_and_consume(tokens_needed=1.0):
+                logger.info(f"Rate limit reached during scheduled posting for {self.user.x_username}.")
+                break
+
+            try:
+                logger.info(f"Posting scheduled tweet {tweet.id}...")
+                response = await self.api_client.post_tweet(text=tweet.content)
+                
+                tweet.status = ScheduledTweetStatus.posted
+                tweet.posted_tweet_id = response.get("data", {}).get("id")
+                self.db.commit()
+                
+            except Exception as e:
+                logger.error(f"Failed to post scheduled tweet {tweet.id}: {e}")
+                tweet.status = ScheduledTweetStatus.failed
+                tweet.error_message = str(e)
+                self.db.commit()
+            
+            await asyncio.sleep(2)

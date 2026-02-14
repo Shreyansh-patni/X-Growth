@@ -1,36 +1,40 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    container_name: x_growth_backend
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - ./backend:/app
-    ports:
-      - "8000:8000"
+  postgres:
+    image: postgres:15
     environment:
-      - DATABASE_URL=postgresql://postgres:changeme@db:5432/x_growth_db
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15-alpine
-    container_name: x_growth_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=changeme
-      - POSTGRES_DB=x_growth_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-x_growth_db}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-  redis:
-    image: redis:7-alpine
-    container_name: x_growth_redis
+  backend:
+    build: ./backend
+    restart: always
     ports:
-      - "6379:6379"
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-x_growth_db}
+      X_CLIENT_ID: ${X_CLIENT_ID}
+      X_CLIENT_SECRET: ${X_CLIENT_SECRET}
+      X_REDIRECT_URI: ${X_REDIRECT_URI}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8001
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
