@@ -58,6 +58,25 @@ async def run_posting_loop():
             
         await asyncio.sleep(60) # P Check every minute
 
+async def run_stats_loop():
+    logger.info("Starting Stats Snapshot Loop...")
+    from app.services.stats_service import StatsService
+    while True:
+        try:
+            db = SessionLocal()
+            users = db.query(crud_user.model).filter(crud_user.model.is_active == True).all()
+            
+            for user in users:
+                service = StatsService(db, user)
+                await service.snapshot_daily_stats()
+                
+            db.close()
+        except Exception as e:
+            logger.error(f"Error in stats loop: {e}")
+            
+        # Run every 12 hours (43200 seconds)
+        await asyncio.sleep(43200)
+
 @app.on_event("startup")
 async def startup_event():
     # Fallback: Create tables if not exist (for MVP resilience)
@@ -73,6 +92,7 @@ async def startup_event():
     try:
         asyncio.create_task(run_monitoring_loop())
         asyncio.create_task(run_posting_loop())
+        asyncio.create_task(run_stats_loop())
     except Exception as e:
         logger.error(f"Failed to start background tasks: {e}")
 

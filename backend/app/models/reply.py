@@ -4,6 +4,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
 from app.core.database import Base
+import enum
+
+class ReplyStatus(str, enum.Enum):
+    pending = "pending"
+    posted = "posted"
+    failed = "failed"
 
 class ReplyCandidate(Base):
     __tablename__ = "reply_candidates"

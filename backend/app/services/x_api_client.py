@@ -89,3 +89,19 @@ class XAPIClient:
             )
             response.raise_for_status()
             return response.json()
+
+    async def fetch_user_me(self) -> Dict[str, Any]:
+        """
+        Fetch current user details including metrics.
+        """
+        params = {
+            "user.fields": "public_metrics"
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/users/me",
+                headers=self.headers,
+                params=params
+            )
+            response.raise_for_status()
+            return response.json()
