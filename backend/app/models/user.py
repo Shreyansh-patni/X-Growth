@@ -34,6 +34,7 @@ class User(Base):
     audit_logs = relationship("AuditLog", back_populates="user")
     keywords = relationship("app.models.keyword.Keyword", back_populates="user")
     personas = relationship("app.models.persona.Persona", back_populates="user")
+    monitored_lists = relationship("app.models.monitored_list.MonitoredList", back_populates="user")
 
 
 class RateLimit(Base):

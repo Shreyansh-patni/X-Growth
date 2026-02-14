@@ -32,6 +32,8 @@ async def run_monitoring_loop():
                 await monitor.monitor_home_timeline()
                 # Monitor keywords
                 await monitor.monitor_keywords()
+                # Monitor lists
+                await monitor.monitor_lists()
                 
             db.close()
         except Exception as e:

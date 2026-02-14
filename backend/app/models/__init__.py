@@ -4,3 +4,4 @@ from .reply import ReplyCandidate, ReplyHistory, DuplicateReplyEmbedding
 from .log import AuditLog
 from .keyword import Keyword
 from .persona import Persona
+from .monitored_list import MonitoredList

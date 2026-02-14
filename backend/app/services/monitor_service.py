@@ -30,6 +30,25 @@ class MonitorService:
             # Here we would implement error handling / backoff logic
             return []
 
+    async def monitor_lists(self):
+        """
+        Fetch active lists and monitor them.
+        """
+        from app.models.monitored_list import MonitoredList
+        lists = (
+            self.db.query(MonitoredList)
+            .filter(MonitoredList.user_id == self.user.id, MonitoredList.is_active == True)
+            .all()
+        )
+        
+        total_new_tweets = []
+        for lst in lists:
+            new_tweets = await self.monitor_list(lst.x_list_id)
+            if new_tweets:
+                total_new_tweets.extend(new_tweets)
+        
+        return total_new_tweets
+
     async def monitor_list(self, list_id: str):
         try:
             raw_tweets = await self.api_client.fetch_list_tweets(list_id)
@@ -37,7 +56,7 @@ class MonitorService:
                 raw_tweets, 
                 source=TweetSource.x_list, 
                 user_id=self.user.id,
-                source_id=None # We'd need to link to XList ID in DB if we had it
+                source_id=list_id # Use list_id as source_id
             )
             logger.info(f"Processed {len(new_tweets)} new tweets from list {list_id} for user {self.user.x_username}")
             return new_tweets
@@ -50,7 +69,11 @@ class MonitorService:
         Fetch active keywords and search for new tweets.
         """
         from app.models.keyword import Keyword
-        keywords = self.db.query(Keyword).filter(Keyword.is_active == True).all()
+        keywords = (
+            self.db.query(Keyword)
+            .filter(Keyword.user_id == self.user.id, Keyword.is_active == True)
+            .all()
+        )
         
         total_new_tweets = []
         for kw in keywords:
